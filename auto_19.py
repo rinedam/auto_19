@@ -43,7 +43,8 @@ def executar_extracao(log_area):
     })
 
     while not stop_event.is_set():  # Loop infinito para execução a cada hora
-        log_area.insert(tk.END, "Aguarde, a importação de dados está sendo realizada...\n")
+        hora_atual = datetime.now().strftime("%H:%M:%S")
+        log_area.insert(tk.END, "Aguarde, a importação de dados está sendo realizada..." + hora_atual + "\n")
         log_area.yview(tk.END)  # Rolagem automática para o final
 
         driver = webdriver.Edge(options=edge_options)
@@ -102,7 +103,8 @@ def executar_extracao(log_area):
             finally:
                 driver.quit()
 
-        log_area.insert(tk.END, "Aguarde 01 hora até a próxima execução...\n")
+        hora_atual = datetime.now().strftime("%H:%M:%S")
+        log_area.insert(tk.END, "Aguarde 01 hora até a próxima execução..." + hora_atual + "\n")
         log_area.insert(tk.END, "-------------------------------------------\n")
         log_area.yview(tk.END)
 
