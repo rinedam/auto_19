@@ -80,7 +80,7 @@ def tempo_ate_proxima_extracao():
 
 # Função para executar a extração
 def executar_extracao(log_area, status_label):
-    download_folder = os.path.expanduser('I:\\.shortcut-targets-by-id\\1BbEijfOOPBwgJuz8LJhqn9OtOIAaEdeO\\Logdi\\Relatório e Dashboards\\CTRCs Disponíveis para Transferência - 19\DB_CTRCs Disponíveis para Transferência\CTA')
+    download_folder = os.path.expanduser('I:\\.shortcut-targets-by-id\\1BbEijfOOPBwgJuz8LJhqn9OtOIAaEdeO\\Logdi\\Relatório e Dashboards\\CTRCs Disponíveis para Transferência - 19\\DB_CTRCs Disponíveis para Transferência\\CTA')
     edge_options = Options()
     edge_options.add_argument("--headless")  # Modo headless
     edge_options.add_argument("--disable-gpu")  # Desabilita a GPU
