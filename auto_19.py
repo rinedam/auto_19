@@ -30,7 +30,7 @@ stop_event = Event()
 def verificar_conexao():
     try:
         # Tenta acessar o site específico
-        response = requests.get("https://sistema.ssw.inf.br/bin/menu01", timeout=5)
+        response = requests.get("https://www.google.com/", timeout=5)
         # Verifica se o site está no ar (código de status HTTP 200)
         if response.status_code == 200:
             return True
