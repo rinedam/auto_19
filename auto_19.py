@@ -29,20 +29,15 @@ stop_event = Event()
 # Função para verificar a conectividade com o site específico
 def verificar_conexao():
     try:
-        # Tenta acessar o site específico
         response = requests.get("https://www.google.com/", timeout=5)
-        # Verifica se o site está no ar (código de status HTTP 200)
-        if response.status_code == 200:
-            return True
-        else:
-            return False
+        return response.status_code == 200
     except requests.ConnectionError:
         return False
 
-# Função para excluir o último arquivo
+# Função para excluir o último arquivo, ignorando "desktop.ini"
 def excluir_ultimo_arquivo(diretorio):
     try:
-        arquivos = [f for f in os.listdir(diretorio) if os.path.isfile(os.path.join(diretorio, f))]
+        arquivos = [f for f in os.listdir(diretorio) if os.path.isfile(os.path.join(diretorio, f)) and f != "desktop.ini"]
         if arquivos:
             arquivos.sort(key=lambda x: os.path.getmtime(os.path.join(diretorio, x)))
             ultimo_arquivo = arquivos[0]
@@ -56,23 +51,20 @@ def excluir_ultimo_arquivo(diretorio):
 # Função para verificar se está no horário comercial
 def esta_no_horario_comercial():
     agora = datetime.now().time()
-    horario_inicio = dt_time(8, 0)  # 08:00
-    horario_fim = dt_time(18, 0)    # 18:00
+    horario_inicio = dt_time(8, 0)
+    horario_fim = dt_time(18, 0)
     return horario_inicio <= agora <= horario_fim
 
 # Função para calcular o tempo restante até as 08:00 do próximo dia
 def tempo_ate_proxima_extracao():
     agora = datetime.now()
-    if agora.time() > dt_time(18, 0):  # Se for após as 18:00
-        # Calcula o tempo até as 08:00 do próximo dia
+    if agora.time() > dt_time(18, 0):
         proximo_dia = agora + timedelta(days=1)
         proximo_dia = proximo_dia.replace(hour=8, minute=0, second=0, microsecond=0)
         tempo_restante = (proximo_dia - agora).total_seconds()
     else:
-        # Se for antes das 08:00, calcula o tempo até as 08:00 do mesmo dia
         proxima_extracao = agora.replace(hour=8, minute=0, second=0, microsecond=0)
         if agora >= proxima_extracao:
-            # Se já passou das 08:00, aguarda 1 hora até a próxima extração
             tempo_restante = 3600
         else:
             tempo_restante = (proxima_extracao - agora).total_seconds()
@@ -82,9 +74,9 @@ def tempo_ate_proxima_extracao():
 def executar_extracao(log_area, status_label):
     download_folder = os.path.expanduser('I:\\.shortcut-targets-by-id\\1BbEijfOOPBwgJuz8LJhqn9OtOIAaEdeO\\Logdi\\Relatório e Dashboards\\CTRCs Disponíveis para Transferência - 19\\DB_CTRCs Disponíveis para Transferência\\CTA')
     edge_options = Options()
-    edge_options.add_argument("--headless")  # Modo headless
-    edge_options.add_argument("--disable-gpu")  # Desabilita a GPU
-    edge_options.add_argument("--window-size=1920,1080")  # Tamanho da janela
+    edge_options.add_argument("--headless")
+    edge_options.add_argument("--disable-gpu")
+    edge_options.add_argument("--window-size=1920,1080")
     edge_options.add_experimental_option('prefs', {
         "download.default_directory": download_folder,
         "download.prompt_for_download": False,
@@ -93,6 +85,13 @@ def executar_extracao(log_area, status_label):
     })
 
     while not stop_event.is_set():
+        if pause_event.is_set():
+            atualizar_status(status_label, "Extração pausada.", "amarelo")
+            log_area.insert(tk.END, f"{datetime.now().strftime('%H:%M:%S')} - Extração pausada.\n")
+            log_area.yview(tk.END)
+            pause_event.wait()  # Aguarda até que o evento de pausa seja limpo
+            continue
+
         if not esta_no_horario_comercial():
             tempo_restante = tempo_ate_proxima_extracao()
             atualizar_status(status_label, f"Fora do horário comercial. Próxima extração em {int(tempo_restante // 3600)} horas e {int((tempo_restante % 3600) // 60)} minutos.", "amarelo")
@@ -123,9 +122,9 @@ def executar_extracao(log_area, status_label):
                         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.NAME, "f1")))
 
                         driver.find_element(By.NAME, "f1").send_keys("LDI")
-                        driver.find_element(By.NAME, "f2").send_keys("12373493977")
-                        driver.find_element(By.NAME, "f3").send_keys("gustavo")
-                        driver.find_element(By.NAME, "f4").send_keys("12032006")
+                        driver.find_element(By.NAME, "f2").send_keys("41968069020")
+                        driver.find_element(By.NAME, "f3").send_keys("botlogdi")
+                        driver.find_element(By.NAME, "f4").send_keys("logbotdi")
                         driver.find_element(By.NAME, "f4").send_keys("+")
                         time.sleep(1)
 
@@ -203,23 +202,34 @@ def atualizar_status(label, texto, cor):
 
 # Função para iniciar a extração em uma thread separada
 def iniciar_extracao(log_area, status_label):
-    if not stop_event.is_set():
+    if not stop_event.is_set() and not pause_event.is_set():
         thread = Thread(target=executar_extracao, args=(log_area, status_label))
         thread.start()
+        # Habilitar botões de controle enquanto a extração está em andamento
+        pausar_btn.config(state=tk.NORMAL)
+        continuar_btn.config(state=tk.DISABLED)  # Desabilitar botão de continuar inicialmente
+        parar_btn.config(state=tk.NORMAL)
 
 # Função para pausar a extração
 def pausar_extracao():
     pause_event.set()
+    pausar_btn.config(state=tk.DISABLED)  # Desabilitar botão de pausar
+    continuar_btn.config(state=tk.NORMAL)  # Habilitar botão de continuar
 
 # Função para continuar a extração
 def continuar_extracao():
     pause_event.clear()  # Limpa o evento de pausa
     logging.info("Extração retomada.")
+    pausar_btn.config(state=tk.NORMAL)  # Habilitar botão de pausar
+    continuar_btn.config(state=tk.DISABLED)  # Desabilitar botão de continuar
 
 # Função para parar a extração
 def parar_extracao():
     stop_event.set()
     pause_event.clear()
+    pausar_btn.config(state=tk.DISABLED)  # Desabilitar botão de pausar
+    continuar_btn.config(state=tk.DISABLED)  # Desabilitar botão de continuar
+    parar_btn.config(state=tk.DISABLED)  # Desabilitar botão de parar
 
 # Configuração da interface gráfica
 def criar_interface():
@@ -248,16 +258,20 @@ def criar_interface():
     status_label.grid(row=2, column=0, columnspan=4, pady=(0, 20))
 
     # Botões
-    botoes = [
-        ("Iniciar Extração", lambda: iniciar_extracao(log_area, status_label)),
-        ("Pausar Extração", pausar_extracao),
-        ("Continuar Extração", continuar_extracao),
-        ("Parar Extração", parar_extracao)
-    ]
+    global pausar_btn, continuar_btn, parar_btn  # Tornar os botões globais
+    pausar_btn = ttk.Button(main_frame, text="Pausar Extração", command=pausar_extracao)
+    continuar_btn = ttk.Button(main_frame, text="Continuar Extração", command=continuar_extracao, state=tk.DISABLED)
+    parar_btn = ttk.Button(main_frame, text="Parar Extração", command=parar_extracao)
 
-    for i, (texto, comando) in enumerate(botoes):
-        botao = ttk.Button(main_frame, text=texto, command=comando, style="Accent.TButton" if i == 0 else None)
-        botao.grid(row=3, column=i, padx=5, pady=5, sticky="ew")
+    # Centralizando os botões
+    pausar_btn.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+    continuar_btn.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+    parar_btn.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
+
+    # Ajustar o layout para centralizar os botões
+    main_frame.grid_columnconfigure(0, weight=1)
+    main_frame.grid_columnconfigure(1, weight=1)
+    main_frame.grid_columnconfigure(2, weight=1)
 
     # Botão para sair
     btn_sair = ttk.Button(main_frame, text="Sair", command=root.quit)
@@ -266,6 +280,9 @@ def criar_interface():
     # Ajustar o layout
     for i in range(4):
         main_frame.grid_columnconfigure(i, weight=1)
+
+    # Iniciar a extração automaticamente ao criar a interface
+    iniciar_extracao(log_area, status_label)
 
     root.mainloop()
 
