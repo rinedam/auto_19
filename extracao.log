@@ -1,3 +1,4 @@
 2025-02-21 14:32:07,829 - INFO - Extração retomada.
 2025-03-11 14:57:40,321 - ERROR - Erro crítico: main thread is not in main loop
 2025-03-11 15:16:00,045 - INFO - Extração retomada.
+2025-04-14 13:51:01,584 - WARNING - The msedgedriver version (134.0.3124.51) detected in PATH at C:\Users\LOGDI\AppData\Local\Programs\Python\Python313\msedgedriver.exe might not be compatible with the detected MicrosoftEdge version (135.0.3179.73); currently, msedgedriver 135.0.3179.73 is recommended for MicrosoftEdge 135.*, so it is advised to delete the driver in PATH and retry
