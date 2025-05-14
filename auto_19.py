@@ -1,5 +1,3 @@
-
-
 import tkinter as tk
 from tkinter import scrolledtext, ttk, messagebox
 from tkinter import font as tkFont
@@ -202,7 +200,7 @@ def excluir_penultimo_arquivo(diretorio, arquivos_ignorados=None):
         return erro_msg
 
 
-def esta_no_horario_comercial(hora_inicio=8, hora_fim=18):
+def esta_no_horario_comercial(hora_inicio=7, hora_fim=18):
     """
     Verifica se o momento atual está dentro do horário comercial definido
     
@@ -219,7 +217,7 @@ def esta_no_horario_comercial(hora_inicio=8, hora_fim=18):
     return horario_inicio <= agora <= horario_fim
 
 
-def tempo_ate_proxima_extracao(hora_inicio=8, intervalo_horas=1):
+def tempo_ate_proxima_extracao(hora_inicio=7, intervalo_horas=1):
     """
     Calcula o tempo restante até a próxima extração
     
