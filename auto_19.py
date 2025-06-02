@@ -466,21 +466,12 @@ class Application:
         self.controls_frame = ttk.Frame(self.status_frame, style='Surface.TFrame')
         self.controls_frame.pack(side=tk.RIGHT, padx=PADDING['medium'], pady=PADDING['medium'])
         
-        # Botões de controle
-        self.start_btn = ttk.Button(
-            self.controls_frame,
-            text=BUTTONS['start']['text'],
-            style=BUTTONS['start']['style'],
-            command=self.iniciar_extracao
-        )
-        self.start_btn.pack(side=tk.LEFT, padx=(0, PADDING['small']))
-        
+        # Remove o botão start_btn e mantém apenas os outros
         self.pause_btn = ttk.Button(
             self.controls_frame,
             text=BUTTONS['pause']['text'],
             style=BUTTONS['pause']['style'],
-            command=self.pausar_extracao,
-            state=tk.DISABLED
+            command=self.pausar_extracao
         )
         self.pause_btn.pack(side=tk.LEFT, padx=(0, PADDING['small']))
         
@@ -497,8 +488,7 @@ class Application:
             self.controls_frame,
             text=BUTTONS['stop']['text'],
             style=BUTTONS['stop']['style'],
-            command=self.parar_extracao,
-            state=tk.DISABLED
+            command=self.parar_extracao
         )
         self.stop_btn.pack(side=tk.LEFT)
         
@@ -554,14 +544,18 @@ class Application:
         pause_event.clear()
         
         # Configura os botões iniciais
-        self.start_btn.config(state=tk.NORMAL)
-        self.pause_btn.config(state=tk.DISABLED)
+        self.pause_btn.config(state=tk.NORMAL)
         self.resume_btn.config(state=tk.DISABLED)
-        self.stop_btn.config(state=tk.DISABLED)
+        self.stop_btn.config(state=tk.NORMAL)
         
         # Adiciona mensagem inicial ao log
-        self.adicionar_log("Sistema iniciado e pronto para extração.")
-        self.atualizar_status('idle')
+        self.adicionar_log("Sistema iniciado automaticamente.")
+        self.atualizar_status('initializing')
+        
+        # Inicia a thread de extração automaticamente
+        self.extraction_thread = Thread(target=self.executar_extracao)
+        self.extraction_thread.daemon = True
+        self.extraction_thread.start()
     
     def atualizar_status(self, status_key, **kwargs):
         """Atualiza o status na interface"""
@@ -612,21 +606,8 @@ class Application:
             logging.error(mensagem)
     
     def iniciar_extracao(self):
-        """Inicia a extração em uma thread separada"""
-        if not stop_event.is_set() and not pause_event.is_set():
-            # Atualiza os botões
-            self.start_btn.config(state=tk.DISABLED)
-            self.pause_btn.config(state=tk.NORMAL)
-            self.resume_btn.config(state=tk.DISABLED)
-            self.stop_btn.config(state=tk.NORMAL)
-            
-            # Atualiza o status
-            self.atualizar_status('initializing')
-            
-            # Inicia a thread de extração
-            self.extraction_thread = Thread(target=self.executar_extracao)
-            self.extraction_thread.daemon = True
-            self.extraction_thread.start()
+        """Método mantido para compatibilidade, mas não mais utilizado"""
+        pass
     
     def pausar_extracao(self):
         """Pausa a extração"""
