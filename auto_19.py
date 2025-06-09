@@ -785,9 +785,42 @@ class Application:
                             # Registra sucesso no log
                             self.adicionar_log("Arquivo baixado com sucesso.", nivel='success')
                             
-                            # Exclui o último arquivo (caso necessário)
-                            resultado = excluir_penultimo_arquivo(download_folder)
-                            self.adicionar_log(resultado, nivel='info')
+                            # Move o arquivo mais recente para o destino
+                            try:
+                                # Define os diretórios
+                                diretorio_destino = r"I:\.shortcut-targets-by-id\1BbEijfOOPBwgJuz8LJhqn9OtOIAaEdeO\Logdi\Relatório e Dashboards\CTRCs Disponíveis para Transferência - 19\DB_CTRCs Disponíveis para Transferência\DB_19CTA"
+                                
+                                # Lista todos os arquivos no diretório de origem (exceto desktop.ini)
+                                arquivos = [f for f in os.listdir(download_folder) if f != "desktop.ini"]
+                                
+                                if len(arquivos) >= 2:  # Verifica se há pelo menos 2 arquivos
+                                    # Ordena por data de modificação (mais recente primeiro)
+                                    arquivos.sort(key=lambda x: os.path.getmtime(os.path.join(download_folder, x)), reverse=True)
+                                    
+                                    # Pega o arquivo mais recente (download atual)
+                                    arquivo_novo = arquivos[0]
+                                    
+                                    # Pega o segundo arquivo mais recente (arquivo anterior)
+                                    arquivo_mover = arquivos[1]
+                                    
+                                    # Renomeia o arquivo novo com a data atual
+                                    data_hora_atual = datetime.now().strftime('%d%m%y %H_%M')
+                                    extensao = os.path.splitext(arquivo_novo)[1]
+                                    novo_nome = f"19CTA {data_hora_atual}{extensao}"
+                                    novo_caminho = os.path.join(download_folder, novo_nome)
+                                    os.rename(os.path.join(download_folder, arquivo_novo), novo_caminho)
+                                    self.adicionar_log(f"Arquivo renomeado: {novo_nome}", nivel='success')
+                                    
+                                    # Move o arquivo anterior para o diretório de destino
+                                    origem = os.path.join(download_folder, arquivo_mover)
+                                    destino = os.path.join(diretorio_destino, arquivo_mover)
+                                    os.rename(origem, destino)
+                                    self.adicionar_log(f"Arquivo anterior movido: {arquivo_mover}", nivel='success')
+                                else:
+                                    self.adicionar_log("Não há arquivos suficientes para mover", nivel='warning')
+                                    
+                            except Exception as e:
+                                self.adicionar_log(f"Erro ao manipular arquivos: {str(e)}", nivel='error')
                             
                             # Atualiza status e tempo da última execução
                             self.atualizar_status('success')
